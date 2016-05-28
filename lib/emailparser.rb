@@ -4,9 +4,9 @@ require 'mail'
 
 class Emailparser
 
-	def initialize(message, attachment_dir)
+	def initialize(message, out_dir, attachment_dir)
 		@message = message
-		@attachment_dir = attachment_dir
+		@attachment_dir = out_dir + "/" + attachment_dir
 	end
 
 	# Voodoo to fix nasty encoded strings
@@ -21,13 +21,19 @@ class Emailparser
 	# Accepts a message
 	def parse_message
 
-		print "loading file: " + @message
+		puts "loading email: " + @message
 
 		email = Mail.read(@message)
 
 		# Defaults
 		source_file = @message.split("/").last
+	
+		# Addresses
+		email_to = email.to.to_a
+		recipients = email_to.concat(email.cc.to_a)
+		addresses = recipients + email.from.to_a
 
+		# Subject
 		if email.subject
 			subject = fix_encode(email.subject)
 		else 
@@ -40,26 +46,12 @@ class Emailparser
 
 		# Check for Multipart
 		if email.multipart?
-
-			# Parse Parts
-			email.parts.map do |part|
-				if (part.content_type.start_with?('text/plain'))
-					body_plain = fix_encode(part.body.decoded)
-				elsif (part.content_type.start_with?('text/html'))
-					body_html = fix_encode(part.body.decoded)
-				elsif (part.content_type.start_with?('multipart/alternative'))
-					print "has multipart/alternative\n"
-				else
-					print "has part: " + part.content_type + "\n"
-				end
-				print "-------------------------------------------------------\n"
-			end
-
+			puts "is a multipart email"
 			body_plain = fix_encode(email.text_part.body.decoded)
 			body_html = fix_encode(email.html_part.body.decoded)
 
 		else
-			print "found single part email\n"
+			puts "is single part email"
 			body_plain = fix_encode(email.body.decoded)
 			body_html = fix_encode(email.body.decoded)
 		end
@@ -70,13 +62,13 @@ class Emailparser
 				filename = fix_encode(attachment.filename)
 				attachments.push(filename)
 				print "found attachment " + filename + "\n"
-				#begin
-				#	File.open(@attachment_dir + filename, "w+b", 0644) do |f|
-				#		f.write attachment.body.decoded 
-				#	end
-				#rescue => e
-				#	puts "Unable to save data for #{filename} because #{e.message}"
-				#end
+				begin
+					File.open(@attachment_dir + filename, "w+b", 0644) do |f|
+						f.write attachment.body.decoded 
+					end
+				rescue => e
+					puts "Unable to save data for #{filename} because #{e.message}"
+				end
 			end
 		end
 
@@ -84,9 +76,13 @@ class Emailparser
 		email_data = {
 			source_file: source_file,
 			message_id: email.message_id,
+			date: email.date,
+			sender: email.from,
 			from: email.from,
 			to: email.to,
 			cc: email.cc,
+			recipients: recipients,
+			addresses: addresses,
 			subject: subject,
 			body_plain: body_plain,
 			body_html: body_html,
