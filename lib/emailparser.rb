@@ -21,7 +21,7 @@ class Emailparser
 	# Accepts a message
 	def parse_message
 
-		puts "loading email: " + @message
+		puts "loading email: " + @message + "\n"
 
 		email = Mail.read(@message)
 
@@ -46,12 +46,15 @@ class Emailparser
 
 		# Check for Multipart
 		if email.multipart?
-			puts "is a multipart email"
-			body_plain = fix_encode(email.text_part.body.decoded)
-			body_html = fix_encode(email.html_part.body.decoded)
-
+			puts "- is a multipart email\n"
+			if email.text_part.body 
+				body_plain = fix_encode(email.text_part.body.decoded)
+			end
+			if email.html_part.body
+				body_html = fix_encode(email.html_part.body.decoded)
+			end
 		else
-			puts "is single part email"
+			puts "- is single part email\n"
 			body_plain = fix_encode(email.body.decoded)
 			body_html = fix_encode(email.body.decoded)
 		end
@@ -61,7 +64,7 @@ class Emailparser
 			if (attachment.content_type.start_with?('image/'))
 				filename = fix_encode(attachment.filename)
 				attachments.push(filename)
-				print "found attachment " + filename + "\n"
+				print "- found attachment " + filename + "\n"
 				begin
 					File.open(@attachment_dir + filename, "w+b", 0644) do |f|
 						f.write attachment.body.decoded 
