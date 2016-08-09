@@ -27,11 +27,30 @@ class Emailparser
 
 		# Defaults
 		source_file = @message.split("/").last
-	
+
 		# Addresses
-		email_to = email.to.to_a
-		recipients = email_to.concat(email.cc.to_a)
-		addresses = recipients + email.from.to_a
+		begin
+			email_to = email.to.to_a
+		rescue
+			email_to = [email.to.gsub("<", "").gsub(">", "")]
+		end
+		begin
+			email_cc = email.cc.to_a
+		rescue
+			email_cc = [email.cc.gsub("<", "").gsub(">", "")]
+		end
+		begin
+			email_from = email.from.to_a
+		rescue
+			email_from = [email.from.gsub("<", "").gsub(">", "")]
+		end
+		begin
+			recipients = email_to.concat(email_cc)
+			addresses = recipients + email_from
+		rescue
+			puts "oops something failed here..."
+			# binding.pry
+		end
 
 		# Subject
 		if email.subject
@@ -47,10 +66,10 @@ class Emailparser
 		# Check for Multipart
 		if email.multipart?
 			puts "- is a multipart email\n"
-			if email.text_part.body 
+			if email.text_part 
 				body_plain = fix_encode(email.text_part.body.decoded)
 			end
-			if email.html_part.body
+			if email.html_part
 				body_html = fix_encode(email.html_part.body.decoded)
 			end
 		else
