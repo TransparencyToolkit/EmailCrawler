@@ -159,7 +159,7 @@ class Emailparser
 	def parse_message
 
 		puts "Loading email: " + @message + "\n"
-		source_hash = Digest::MD5.hexdigest(File.read(@message))
+		source_hash = Digest::SHA256.hexdigest(File.read(@message))
 		puts "Hash of email: " + source_hash
 
 		email = Mail.read(@message)
