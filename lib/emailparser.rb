@@ -1,6 +1,7 @@
 require 'pry'
 require 'json'
 require 'mail'
+require 'digest'
 
 class Emailparser
 
@@ -135,10 +136,10 @@ class Emailparser
 		end
 	end
 
-	def make_attachment_folder(attachments, message_id)
+	def make_attachment_folder(attachments, source_hash)
 		if (!attachments.empty?)
-			puts "Creating attachments directory: " + message_id
-			attachments_dir = @attachment_dir + message_id
+			puts "Creating attachments directory: " + source_hash
+			attachments_dir = @attachment_dir + source_hash
       		Dir.mkdir(attachments_dir) if !Dir.exist?(attachments_dir)
 		end
 	end
@@ -157,7 +158,9 @@ class Emailparser
 	# Accepts a message
 	def parse_message
 
-		puts "loading email: " + @message + "\n"
+		puts "Loading email: " + @message + "\n"
+		source_hash = Digest::MD5.hexdigest(File.read(@message))
+		puts "Hash of email: " + source_hash
 
 		email = Mail.read(@message)
 
@@ -215,7 +218,7 @@ class Emailparser
 		end
 
 		# Handle Attachments
-		make_attachment_folder(email.attachments, email.message_id)
+		make_attachment_folder(email.attachments, source_hash)
 		email.attachments.each do | attachment |
 			attachment_save = false
 			filename = fix_encode(attachment.filename)
@@ -247,14 +250,15 @@ class Emailparser
 
 			# Process Attachment
 			if (attachment_save == true)	
-				attachments.push(email.message_id + "/" + filename)
-				save_attachment(attachment, email.message_id, filename)
+				attachments.push(source_hash + "/" + filename)
+				save_attachment(attachment, source_hash, filename)
 			end
 		end
 
 		# Structure Data
 		email_data = {
 			source_file: source_file,
+			source_hash: source_hash,
 			message_id: email.message_id,
 			date: email.date,
 			sender: email.from,
