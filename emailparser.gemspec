@@ -7,7 +7,6 @@ Gem::Specification.new do |s|
   s.authors     = ['Brennan Novak']
   s.email       = 'hi@brennannovak.com'
   s.files       = ["lib/emailparser.rb"]
-  s.homepage    =
-    'https://github.com/TransparencyToolkit/EmailParser'
-  s.license     = 'GPL'
+  s.homepage    = 'https://github.com/TransparencyToolkit/EmailParser'
+  s.license     = 'MIT'
 end
