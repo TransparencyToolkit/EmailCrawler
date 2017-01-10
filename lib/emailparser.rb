@@ -138,7 +138,7 @@ class Emailparser
 
 	def make_attachment_folder(attachments, source_hash)
 		if (!attachments.empty?)
-			puts "Creating attachments directory: " + source_hash
+			puts "Creating sub-directory: " + source_hash
 			attachments_dir = @attachment_dir + source_hash
       		Dir.mkdir(attachments_dir) if !Dir.exist?(attachments_dir)
 		end
@@ -213,8 +213,11 @@ class Emailparser
 			end
 		else
 			puts " - is single part\n"
-			body_plain = fix_encode(email.body.decoded)
-			body_html = fix_encode(email.body.decoded)
+			if email.content_type.start_with?('text/html')
+				body_html = fix_encode(email.body.decoded)
+			else 
+				body_plain = fix_encode(email.body.decoded)
+			end
 		end
 
 		# Handle Attachments
