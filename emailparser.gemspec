@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'emailparser'
-  s.version     = '0.1.5'
+  s.version     = '0.1.6'
   s.date        = '2017-01-10'
   s.summary     = 'Parses a single email file to JSON with attachments'
   s.description = 'Parses a signle email file to JSON with attachments'

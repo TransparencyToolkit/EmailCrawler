@@ -179,6 +179,13 @@ class Emailparser
 			message_id = fix_encode(email.message_id)
 		end
 
+		# Date
+		begin
+			email_date = email.date
+		rescue
+			email_date = "Thu, 1 Jan 1970 00:00:00 +0000"
+		end
+
 		# Addresses
 		begin
 			email_to = email.to.to_a
@@ -274,7 +281,7 @@ class Emailparser
 			source_file: source_file,
 			source_hash: source_hash,
 			message_id: message_id,
-			date: email.date,
+			date: email_date,
 			sender: email_from,
 			from: email_from,
 			to: email_to,
