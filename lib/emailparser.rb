@@ -128,11 +128,17 @@ class Emailparser
 	end
 
 	# Voodoo to fix nasty encoded strings
-	def fix_encode(str)
-		if str.is_a?(String)
-		  return str.unpack('C*').pack('U*')
+	def fix_encode(text)
+		if text.is_a?(String)
+			return text.unpack('C*').pack('U*')
+		elsif text.is_a?(Array)
+			fixed = []
+			text.each do | item |
+				fixed.push(item.unpack('C*').pack('U*'))
+			end
+			return fixed
 		else
-		  return str
+			return text
 		end
 	end
 
@@ -160,28 +166,34 @@ class Emailparser
 
 		puts "Loading email: " + @message + "\n"
 		source_hash = Digest::SHA256.hexdigest(File.read(@message))
-		puts "Hash of email: " + source_hash
+		puts "SHA256 Hash: " + source_hash
 
 		email = Mail.read(@message)
 
 		# Defaults
 		source_file = @message.split("/").last
+		
+		if email.message_id.nil?
+			message_id = ""
+		else
+			message_id = fix_encode(email.message_id)
+		end
 
 		# Addresses
 		begin
 			email_to = email.to.to_a
 		rescue
-			email_to = [email.to.gsub("<", "").gsub(">", "")]
+			email_to = fix_encode([email.to.gsub("<", "").gsub(">", "")])
 		end
 		begin
 			email_cc = email.cc.to_a
 		rescue
-			email_cc = [email.cc.gsub("<", "").gsub(">", "")]
+			email_cc = fix_encode([email.cc.gsub("<", "").gsub(">", "")])
 		end
 		begin
 			email_from = email.from.to_a
 		rescue
-			email_from = [email.from.gsub("<", "").gsub(">", "")]
+			email_from = fix_encode([email.from.gsub("<", "").gsub(">", "")])
 		end
 		begin
 			recipients = email_to.concat(email_cc)
@@ -262,12 +274,12 @@ class Emailparser
 		email_data = {
 			source_file: source_file,
 			source_hash: source_hash,
-			message_id: email.message_id,
+			message_id: message_id,
 			date: email.date,
-			sender: email.from,
-			from: email.from,
-			to: email.to,
-			cc: email.cc,
+			sender: email_from,
+			from: email_from,
+			to: email_to,
+			cc: email_cc,
 			recipients: recipients,
 			addresses: addresses,
 			subject: subject,
