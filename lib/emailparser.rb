@@ -225,11 +225,10 @@ class Emailparser
 			end
 		else
 			puts " - is single part\n"
-			if email.content_type.start_with?('text/html')
+			if !email.content_type.nil? and email.content_type.start_with?('text/html')
 				body_html = fix_encode(email.body.decoded)
-			else 
-				body_plain = fix_encode(email.body.decoded)
 			end
+			body_plain = fix_encode(email.body.decoded)
 		end
 
 		# Handle Attachments
