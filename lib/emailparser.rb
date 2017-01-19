@@ -2,11 +2,12 @@ require 'pry'
 require 'json'
 require 'mail'
 require 'digest'
+require 'pathname'
 
 class EmailParser
 
-	def initialize(message, out_dir, attachment_dir)
-		@message = message
+	def initialize(path, out_dir, attachment_dir)
+		@path = path
 		@attachment_dir = out_dir + "/" + attachment_dir
 		@allowed_documents = [
 			'application/x-mobipocket-ebook',
@@ -130,11 +131,21 @@ class EmailParser
 	# Voodoo to fix nasty encoded strings
 	def fix_encode(text)
 		if text.is_a?(String)
-			return text.unpack('C*').pack('U*')
+      		text_out = text.to_s.encode('UTF-8', {
+                                           :invalid => :replace,
+                                           :undef   => :replace,
+                                           :replace => '?'
+                                         })
+			return text_out
 		elsif text.is_a?(Array)
 			fixed = []
 			text.each do | item |
-				fixed.push(item.unpack('C*').pack('U*'))
+				item_fixed = item.to_s.encode('UTF-8', {
+                                           :invalid => :replace,
+                                           :undef   => :replace,
+                                           :replace => '?'
+                                         })
+				fixed.push(item_fixed)
 			end
 			return fixed
 		else
@@ -163,16 +174,13 @@ class EmailParser
 
 	# Accepts a message
 	def parse_message
-binding.pry
-		puts "Loading email: " + @message + "\n"
-		source_hash = Digest::SHA256.hexdigest(File.read(@message))
-		puts "SHA256 Hash: " + source_hash
-
-		email = Mail.read(@message)
+		puts "Loading email: " + @path + "\n"
+		email_file = File.read(@path).unpack('C*').pack('U*')
+		source_file = File.basename(@path)
+		source_hash = Digest::SHA256.hexdigest(email_file)
+		email = Mail.new(email_file)
 
 		# Defaults
-		source_file = @message.split("/").last
-		
 		if email.message_id.nil?
 			message_id = ""
 		else
@@ -216,7 +224,7 @@ binding.pry
 		else 
 			subject = "No Subject"
 		end
-		
+
 		body_plain	= ""
 		body_html	= ""
 		attachments = []
