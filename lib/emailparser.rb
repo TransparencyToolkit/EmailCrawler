@@ -3,7 +3,7 @@ require 'json'
 require 'mail'
 require 'digest'
 
-class Emailparser
+class EmailParser
 
 	def initialize(message, out_dir, attachment_dir)
 		@message = message
@@ -163,7 +163,7 @@ class Emailparser
 
 	# Accepts a message
 	def parse_message
-
+binding.pry
 		puts "Loading email: " + @message + "\n"
 		source_hash = Digest::SHA256.hexdigest(File.read(@message))
 		puts "SHA256 Hash: " + source_hash
